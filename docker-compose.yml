@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  http:
+    build:
+      context: .
+      dockerfile: cicd/docker/Dockerfile
+    container_name: app-http
+    env_file: .env
+    environment:
+      INTERFACE: HTTP
+      HTTP_PORT: 3000
+    ports:
+      - 3000:3000
+
+  cron:
+    build:
+      context: .
+      dockerfile: cicd/docker/Dockerfile
+    container_name: app-cron
+    env_file: .env
+    environment:
+      INTERFACE: CRON
+      CRON_PORT: 3001
+    ports:
+      - 3001:3001
