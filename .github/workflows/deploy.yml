@@ -1,0 +1,73 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+env:
+  GCP_PROJECT_ID: chat-assistant-490115
+  GCP_PROJECT_NUMBER: '638636978312'
+  GCP_REGION: asia-southeast2
+  AR_REPO: ms-jundi-betest
+  SERVICE: ms-jundi-betest
+  WIF_PROVIDER: projects/638636978312/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+  DEPLOYER_SA: gh-deployer@chat-assistant-490115.iam.gserviceaccount.com
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOYER_SA }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and push image
+        env:
+          IMAGE: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.AR_REPO }}/${{ env.SERVICE }}:${{ github.sha }}
+        run: |
+          docker build -f cicd/docker/Dockerfile -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy "$SERVICE" \
+            --image="$IMAGE" \
+            --region="$GCP_REGION" \
+            --platform=managed \
+            --allow-unauthenticated \
+            --port=8080 \
+            --cpu=1 \
+            --memory=512Mi \
+            --min-instances=0 \
+            --max-instances=3 \
+            --timeout=60 \
+            --set-env-vars="INTERFACE=HTTP,NODE_ENV=production,BASE_PATH=,CORS=*,JWT_EXPIRES_IN=1h,CACHE_TTL_SECONDS=300,KAFKA_ENABLED=false" \
+            --set-secrets="MONGODB_URI=MONGODB_URI:latest,JWT_SECRET=JWT_SECRET:latest"
+
+      - name: Show service URL
+        run: |
+          URL=$(gcloud run services describe "$SERVICE" --region="$GCP_REGION" --format='value(status.url)')
+          echo "Service URL: $URL"
+          echo "## Deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Service: $SERVICE" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Region: $GCP_REGION" >> "$GITHUB_STEP_SUMMARY"
+          echo "- URL: $URL" >> "$GITHUB_STEP_SUMMARY"

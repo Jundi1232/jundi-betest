@@ -161,3 +161,49 @@ npm test
 
 Unit tests cover entity mapping, JWT driver, Redis cache helper, auth
 middleware, and the user usecases (create, detail/cache, generate-token).
+
+## Deployment (GCP Cloud Run via GitHub Actions)
+
+This project deploys to Google Cloud Run on every push to `master` using
+GitHub Actions and Workload Identity Federation (no service account JSON
+key is stored in GitHub).
+
+### Infrastructure (already provisioned)
+
+- Project: `chat-assistant-490115` (number `638636978312`)
+- Region: `asia-southeast2`
+- Artifact Registry: `ms-jundi-betest`
+- Service Account: `gh-deployer@chat-assistant-490115.iam.gserviceaccount.com`
+  - Roles: `run.admin`, `artifactregistry.writer`, `iam.serviceAccountUser`,
+    `secretmanager.secretAccessor`
+- Workload Identity Pool: `github-pool`
+- Workload Identity Provider: `github-provider`
+  - Bound to repo `Jundi1232/jundi-betest`
+- Secret Manager:
+  - `MONGODB_URI` (MongoDB Atlas connection string)
+  - `JWT_SECRET` (random 96-char hex)
+
+### Workflows
+
+- `.github/workflows/ci.yml` — Runs lint, test, and build on PRs and feature
+  branches.
+- `.github/workflows/deploy.yml` — Builds Docker image, pushes to Artifact
+  Registry, and deploys to Cloud Run on push to `master`.
+
+### Runtime configuration
+
+Cloud Run service `ms-jundi-betest` is deployed with:
+
+- `INTERFACE=HTTP`, `NODE_ENV=production`, `KAFKA_ENABLED=false`
+- `MONGODB_URI` and `JWT_SECRET` injected from Secret Manager
+- Port `8080`, allow-unauthenticated, min `0` / max `3` instances
+- Health endpoint: `GET /healthz`
+
+To enable Redis later, create a `REDIS_URL` secret (or individual
+`REDIS_*` secrets) and add them to the `--set-secrets` flag in the
+deploy workflow.
+
+### Manual deploy
+
+Trigger the deploy workflow manually from the GitHub Actions tab
+("Deploy to Cloud Run" → Run workflow).

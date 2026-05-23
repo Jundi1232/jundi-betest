@@ -6,7 +6,7 @@ import httpErrors from 'http-errors'
 import errorHandler from './middlewares/error-handler'
 import routers from './routes'
 
-const port = process.env.HTTP_PORT || 3000
+const port = process.env.PORT || process.env.HTTP_PORT || 3000
 const basePath = process.env.BASE_PATH || '/'
 
 const run = () => {
