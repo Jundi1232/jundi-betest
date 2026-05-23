@@ -60,8 +60,8 @@ jobs:
             --min-instances=0 \
             --max-instances=3 \
             --timeout=60 \
-            --set-env-vars="INTERFACE=HTTP,NODE_ENV=production,BASE_PATH=,CORS=*,JWT_EXPIRES_IN=1h,CACHE_TTL_SECONDS=300,KAFKA_ENABLED=false" \
-            --set-secrets="MONGODB_URI=MONGODB_URI:latest,JWT_SECRET=JWT_SECRET:latest"
+            --set-env-vars="INTERFACE=HTTP,NODE_ENV=production,BASE_PATH=,CORS=*,JWT_EXPIRES_IN=1h,CACHE_TTL_SECONDS=300,KAFKA_ENABLED=false,REDIS_HOST=sound-gopher-102954.upstash.io,REDIS_PORT=6379,REDIS_USERNAME=default,REDIS_PREFIX=redis_jundi_betest:,REDIS_TLS=true" \
+            --set-secrets="MONGODB_URI=MONGODB_URI:latest,JWT_SECRET=JWT_SECRET:latest,REDIS_PASSWORD=REDIS_PASSWORD:latest"
 
       - name: Show service URL
         run: |

@@ -182,6 +182,7 @@ key is stored in GitHub).
 - Secret Manager:
   - `MONGODB_URI` (MongoDB Atlas connection string)
   - `JWT_SECRET` (random 96-char hex)
+  - `REDIS_PASSWORD` (Upstash Redis password)
 
 ### Workflows
 
@@ -195,13 +196,11 @@ key is stored in GitHub).
 Cloud Run service `ms-jundi-betest` is deployed with:
 
 - `INTERFACE=HTTP`, `NODE_ENV=production`, `KAFKA_ENABLED=false`
-- `MONGODB_URI` and `JWT_SECRET` injected from Secret Manager
+- `MONGODB_URI`, `JWT_SECRET`, `REDIS_PASSWORD` injected from Secret Manager
+- Redis (Upstash) via TLS: `REDIS_HOST`, `REDIS_PORT=6379`,
+  `REDIS_USERNAME=default`, `REDIS_TLS=true`
 - Port `8080`, allow-unauthenticated, min `0` / max `3` instances
 - Health endpoint: `GET /healthz`
-
-To enable Redis later, create a `REDIS_URL` secret (or individual
-`REDIS_*` secrets) and add them to the `--set-secrets` flag in the
-deploy workflow.
 
 ### Manual deploy
 
