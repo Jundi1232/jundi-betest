@@ -127,6 +127,3 @@ tags
 built/
 
 # End of https://www.gitignore.io/api/vim,node,visualstudiocode
-
-# Kiro settings (contains secrets)
-.kiro/settings/
