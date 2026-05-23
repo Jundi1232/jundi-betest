@@ -1,6 +1,11 @@
 .env
-package-lock.json
-
+.env.*
 node_modules/
 dist/
 logs/
+.git/
+.github/
+.vscode/
+coverage/
+tests/
+*.md
